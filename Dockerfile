@@ -34,14 +34,14 @@ RUN pip install --no-cache-dir -r requirements.txt \
     -i https://mirrors.aliyun.com/pypi/simple/ --trusted-host=mirrors.aliyun.com
 
 # Install additional dependencies
-RUN pip install --no-cache-dir fastmcp \
+RUN pip install --no-cache-dir fastmcp funasr \
     -i https://mirrors.aliyun.com/pypi/simple/ --trusted-host=mirrors.aliyun.com
 
 # Copy application code (including third_party with Matcha-TTS)
 COPY third_party third_party/
 COPY cosyvoice cosyvoice/
 COPY asset asset/
-COPY app.py mcp_server.py ./
+COPY app.py mcp_server.py model.py ./
 
 # Set Python path
 ENV PYTHONPATH=/app:/app/third_party/Matcha-TTS

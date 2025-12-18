@@ -28,22 +28,34 @@ sys.path.insert(0, str(ROOT_DIR / "third_party/Matcha-TTS"))
 from cosyvoice.cli.cosyvoice import AutoModel
 from cosyvoice.utils.file_utils import load_wav
 
-# Whisper for auto transcription
-_whisper_model = None
+# Fun-ASR-Nano for auto transcription
+_asr_model = None
 
-def get_whisper_model():
-    global _whisper_model
-    if _whisper_model is None:
-        import whisper
-        print("Loading Whisper base model...")
-        _whisper_model = whisper.load_model("base")
-    return _whisper_model
+def get_asr_model():
+    global _asr_model
+    if _asr_model is None:
+        from funasr import AutoModel
+        print("Loading Fun-ASR-Nano model...")
+        _asr_model = AutoModel(
+            model="FunAudioLLM/Fun-ASR-Nano-2512",
+            trust_remote_code=True,
+            remote_code="./model.py",
+            device="cuda:0",
+        )
+        print("Fun-ASR-Nano loaded!")
+    return _asr_model
 
 def transcribe_audio(audio_path: str) -> str:
-    """Use Whisper to transcribe audio file"""
-    model = get_whisper_model()
-    result = model.transcribe(audio_path, language=None)
-    return result["text"].strip()
+    """Use Fun-ASR-Nano to transcribe audio file"""
+    model = get_asr_model()
+    res = model.generate(
+        input=[audio_path],
+        cache={},
+        batch_size=1,
+        language="auto",
+        itn=True,
+    )
+    return res[0]["text"].strip() if res else ""
 
 # Directories
 INPUT_DIR = Path(os.getenv("INPUT_DIR", "/data/input"))
@@ -366,7 +378,7 @@ async def create_voice(
     temp_path.write_bytes(content)
     
     try:
-        # 如果没有提供文本，使用 Whisper 转写
+        # 如果没有提供文本，使用 Fun-ASR 转写
         if not text:
             text = transcribe_audio(str(temp_path))
         
@@ -470,7 +482,7 @@ async def tts(
                 raise HTTPException(400, "zero_shot mode requires prompt_wav (reference audio)")
             # 自动识别 prompt_text
             if not prompt_text:
-                print("Auto transcribing prompt audio with Whisper turbo...")
+                print("Auto transcribing prompt audio with Fun-ASR...")
                 prompt_text = transcribe_audio(prompt_audio)
                 print(f"Transcribed: {prompt_text}")
         elif mode == "cross_lingual":
@@ -702,7 +714,7 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
                     </div>
                     <div class="form-group" id="prompt-text-group">
                         <label data-i18n="promptText">参考文本 (留空则自动识别)</label>
-                        <input type="text" id="prompt-text" placeholder="留空将使用 Whisper 自动识别">
+                        <input type="text" id="prompt-text" placeholder="留空将使用 Fun-ASR 自动识别">
                     </div>
                     <div class="form-group">
                         <label style="display: flex; align-items: center; gap: 10px;">
