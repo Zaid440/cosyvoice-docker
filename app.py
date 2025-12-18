@@ -605,11 +605,11 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
     <style>
         :root {
             --bg: #1a1a2e; --card: #16213e; --primary: #0f3460; --accent: #e94560;
-            --text: #eee; --text-muted: #aaa; --border: #0f3460;
+            --text: #eee; --text-muted: #aaa; --border: #0f3460; --danger: #c0392b;
         }
         [data-theme="light"] {
             --bg: #f5f5f5; --card: #fff; --primary: #e3f2fd; --accent: #1976d2;
-            --text: #333; --text-muted: #666; --border: #ddd;
+            --text: #333; --text-muted: #666; --border: #ddd; --danger: #e74c3c;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
@@ -682,7 +682,7 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
                             <option value="">-- 上传新音频 --</option>
                         </select>
                         <button onclick="refreshVoices()" title="刷新列表" style="padding: 8px 12px;">🔄</button>
-                        <button onclick="deleteSelectedVoice()" title="删除选中音色" style="padding: 8px 12px; background: #c0392b;">🗑️</button>
+                        <button onclick="deleteSelectedVoice()" title="删除选中音色" style="padding: 8px 12px; background: var(--danger, #c0392b);">🗑️</button>
                     </div>
                 </div>
                 
@@ -731,7 +731,7 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
             <div class="row" style="align-items: center;">
                 <div class="form-group" style="margin-bottom: 0;">
                     <label style="display: flex; align-items: center; gap: 10px;">
-                        <input type="checkbox" id="stream-mode"> <span data-i18n="streamMode">流式输出 (低延迟)</span>
+                        <input type="checkbox" id="stream-mode" checked> <span data-i18n="streamMode">流式输出 (低延迟)</span>
                     </label>
                 </div>
             </div>
@@ -739,6 +739,9 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
             <div class="progress-bar"><div class="progress-bar-fill" id="progress"></div></div>
             <div id="timer" class="status hidden" style="text-align: center; font-size: 1.1em;"></div>
             <audio id="audio-output" controls class="hidden"></audio>
+            <button id="download-btn" class="hidden" style="margin-top: 10px; padding: 10px 20px; background: var(--accent); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 1em;">
+                📥 <span data-i18n="download">下载音频</span>
+            </button>
         </div>
 
         <div class="card">
@@ -751,10 +754,10 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
 
     <script>
         const i18n = {
-            'zh-CN': { input: '输入文本', mode: '合成模式', zeroShot: '零样本克隆', crossLingual: '跨语种', instruct: '指令控制', promptAudio: '参考音频 (3-30秒)', promptText: '参考文本 (留空自动识别)', instructText: '指令文本', speed: '语速', generate: '生成语音', gpuStatus: 'GPU 状态', releaseGPU: '释放显存', uploadHint: '点击或拖拽上传音频', textPlaceholder: '请输入要合成的文本...', streamMode: '流式输出 (低延迟)', generating: '生成中', completed: '完成', firstChunk: '首包', voiceSelect: '选择音色', voiceName: '音色名称', saveVoice: '保存为自定义音色', newUpload: '-- 上传新音频 --' },
-            'en': { input: 'Input Text', mode: 'Synthesis Mode', zeroShot: 'Zero-shot Clone', crossLingual: 'Cross-lingual', instruct: 'Instruct', promptAudio: 'Reference Audio (3-30s)', promptText: 'Reference Text (auto if empty)', instructText: 'Instruction', speed: 'Speed', generate: 'Generate', gpuStatus: 'GPU Status', releaseGPU: 'Release GPU', uploadHint: 'Click or drag to upload', textPlaceholder: 'Enter text to synthesize...', streamMode: 'Streaming (Low Latency)', generating: 'Generating', completed: 'Completed', firstChunk: 'First chunk', voiceSelect: 'Select Voice', voiceName: 'Voice Name', saveVoice: 'Save as custom voice', newUpload: '-- Upload new audio --' },
-            'zh-TW': { input: '輸入文本', mode: '合成模式', zeroShot: '零樣本克隆', crossLingual: '跨語種', instruct: '指令控制', promptAudio: '參考音頻', promptText: '參考文本', instructText: '指令文本', speed: '語速', generate: '生成語音', gpuStatus: 'GPU 狀態', releaseGPU: '釋放顯存', uploadHint: '點擊或拖拽上傳', textPlaceholder: '請輸入要合成的文本...', streamMode: '流式輸出 (低延遲)', generating: '生成中', completed: '完成', firstChunk: '首包', voiceSelect: '選擇音色', voiceName: '音色名稱', saveVoice: '保存為自定義音色', newUpload: '-- 上傳新音頻 --' },
-            'ja': { input: '入力テキスト', mode: '合成モード', zeroShot: 'ゼロショット', crossLingual: '多言語', instruct: '指示制御', promptAudio: '参照音声', promptText: '参照テキスト', instructText: '指示テキスト', speed: '速度', generate: '生成', gpuStatus: 'GPU状態', releaseGPU: 'GPU解放', uploadHint: 'クリックまたはドラッグ', textPlaceholder: 'テキストを入力...', streamMode: 'ストリーミング', generating: '生成中', completed: '完了', firstChunk: '初回', voiceSelect: '音声選択', voiceName: '音声名', saveVoice: 'カスタム音声として保存', newUpload: '-- 新規アップロード --' }
+            'zh-CN': { input: '输入文本', mode: '合成模式', zeroShot: '零样本克隆', crossLingual: '跨语种', instruct: '指令控制', promptAudio: '参考音频 (3-30秒)', promptText: '参考文本 (留空自动识别)', instructText: '指令文本', speed: '语速', generate: '生成语音', gpuStatus: 'GPU 状态', releaseGPU: '释放显存', uploadHint: '点击或拖拽上传音频', textPlaceholder: '请输入要合成的文本...', streamMode: '流式输出 (低延迟)', generating: '生成中', completed: '完成', firstChunk: '首包', totalTime: '总耗时', audioDuration: '音频', voiceSelect: '选择音色', voiceName: '音色名称', saveVoice: '保存为自定义音色', newUpload: '-- 上传新音频 --', download: '下载音频' },
+            'en': { input: 'Input Text', mode: 'Synthesis Mode', zeroShot: 'Zero-shot Clone', crossLingual: 'Cross-lingual', instruct: 'Instruct', promptAudio: 'Reference Audio (3-30s)', promptText: 'Reference Text (auto if empty)', instructText: 'Instruction', speed: 'Speed', generate: 'Generate', gpuStatus: 'GPU Status', releaseGPU: 'Release GPU', uploadHint: 'Click or drag to upload', textPlaceholder: 'Enter text to synthesize...', streamMode: 'Streaming (Low Latency)', generating: 'Generating', completed: 'Completed', firstChunk: 'TTFB', totalTime: 'Total', audioDuration: 'Audio', voiceSelect: 'Select Voice', voiceName: 'Voice Name', saveVoice: 'Save as custom voice', newUpload: '-- Upload new audio --', download: 'Download' },
+            'zh-TW': { input: '輸入文本', mode: '合成模式', zeroShot: '零樣本克隆', crossLingual: '跨語種', instruct: '指令控制', promptAudio: '參考音頻', promptText: '參考文本', instructText: '指令文本', speed: '語速', generate: '生成語音', gpuStatus: 'GPU 狀態', releaseGPU: '釋放顯存', uploadHint: '點擊或拖拽上傳', textPlaceholder: '請輸入要合成的文本...', streamMode: '流式輸出 (低延遲)', generating: '生成中', completed: '完成', firstChunk: '首包', totalTime: '總耗時', audioDuration: '音頻', voiceSelect: '選擇音色', voiceName: '音色名稱', saveVoice: '保存為自定義音色', newUpload: '-- 上傳新音頻 --', download: '下載音頻' },
+            'ja': { input: '入力テキスト', mode: '合成モード', zeroShot: 'ゼロショット', crossLingual: '多言語', instruct: '指示制御', promptAudio: '参照音声', promptText: '参照テキスト', instructText: '指示テキスト', speed: '速度', generate: '生成', gpuStatus: 'GPU状態', releaseGPU: 'GPU解放', uploadHint: 'クリックまたはドラッグ', textPlaceholder: 'テキストを入力...', streamMode: 'ストリーミング', generating: '生成中', completed: '完了', firstChunk: '初回', totalTime: '合計', audioDuration: '音声', voiceSelect: '音声選択', voiceName: '音声名', saveVoice: 'カスタム音声として保存', newUpload: '-- 新規アップロード --', download: 'ダウンロード' }
         };
         let currentLang = 'zh-CN', currentMode = 'zero_shot', promptFile = null, selectedVoiceId = null;
 
@@ -849,12 +852,51 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
             const len = Math.min(FADE_SAMPLES, arr.length);
             for (let i = 0; i < len; i++) arr[i] *= i / len;
         }
+        
+        function createWavBlob(pcmData, sampleRate) {
+            const numChannels = 1, bitsPerSample = 16;
+            const byteRate = sampleRate * numChannels * bitsPerSample / 8;
+            const blockAlign = numChannels * bitsPerSample / 8;
+            const dataSize = pcmData.length;
+            const buffer = new ArrayBuffer(44 + dataSize);
+            const view = new DataView(buffer);
+            
+            const writeString = (offset, str) => { for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i)); };
+            writeString(0, 'RIFF');
+            view.setUint32(4, 36 + dataSize, true);
+            writeString(8, 'WAVE');
+            writeString(12, 'fmt ');
+            view.setUint32(16, 16, true);
+            view.setUint16(20, 1, true);
+            view.setUint16(22, numChannels, true);
+            view.setUint32(24, sampleRate, true);
+            view.setUint32(28, byteRate, true);
+            view.setUint16(32, blockAlign, true);
+            view.setUint16(34, bitsPerSample, true);
+            writeString(36, 'data');
+            view.setUint32(40, dataSize, true);
+            new Uint8Array(buffer, 44).set(pcmData);
+            return new Blob([buffer], { type: 'audio/wav' });
+        }
+        
+        let currentAudioBlob = null;
+        document.getElementById('download-btn').onclick = () => {
+            if (currentAudioBlob) {
+                const url = URL.createObjectURL(currentAudioBlob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `cosyvoice_${Date.now()}.wav`;
+                a.click();
+                URL.revokeObjectURL(url);
+            }
+        };
 
         async function generate() {
             const btn = document.getElementById('generate-btn');
             const progress = document.getElementById('progress');
             const audio = document.getElementById('audio-output');
             const timer = document.getElementById('timer');
+            const downloadBtn = document.getElementById('download-btn');
             const isStream = document.getElementById('stream-mode').checked;
             const t = i18n[currentLang];
             
@@ -862,8 +904,10 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
             progress.style.width = '10%';
             timer.classList.remove('hidden');
             audio.classList.add('hidden');
+            downloadBtn.classList.add('hidden');
             stopAllAudio();
             
+            let audioBlob = null;  // Store audio for download
             const startTime = Date.now();
             let timerInterval = setInterval(() => {
                 const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
@@ -927,7 +971,9 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
                     
                     const reader = res.body.getReader();
                     let pendingBytes = new Uint8Array(0);
+                    let allPcmBytes = [];  // Collect all PCM data for download
                     let samples = [];
+                    let totalSamples = 0;
                     let isFirstChunk = true;
                     let firstChunkTime = null;
                     
@@ -948,12 +994,15 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
                         if (nextPlayTime < audioContext.currentTime - 0.1) nextPlayTime = audioContext.currentTime + 0.05;
                         source.start(nextPlayTime);
                         nextPlayTime += audioBuffer.duration;
+                        totalSamples += samples.length;
                         samples = [];
                     }
                     
                     while (true) {
                         const { done, value } = await reader.read();
                         if (done) { playBuffer(); break; }
+                        
+                        allPcmBytes.push(value);  // Collect for download
                         
                         if (!firstChunkTime) {
                             firstChunkTime = Date.now();
@@ -979,19 +1028,31 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
                         if (samples.length >= MIN_BUFFER_SIZE) playBuffer();
                     }
                     
+                    // Create WAV blob for download
+                    const totalLength = allPcmBytes.reduce((sum, arr) => sum + arr.length, 0);
+                    const pcmData = new Uint8Array(totalLength);
+                    let offset = 0;
+                    for (const chunk of allPcmBytes) { pcmData.set(chunk, offset); offset += chunk.length; }
+                    audioBlob = createWavBlob(pcmData, SAMPLE_RATE);
+                    
                     clearInterval(timerInterval);
                     const totalTime = ((Date.now() - startTime) / 1000).toFixed(2);
-                    timer.textContent = `✅ ${t.completed}! ${totalTime}s`;
+                    const ttfb = firstChunkTime ? ((firstChunkTime - startTime) / 1000).toFixed(2) : '-';
+                    const audioDuration = (totalSamples / 24000).toFixed(2);
+                    timer.textContent = `✅ ${t.firstChunk}: ${ttfb}s | ${t.totalTime}: ${totalTime}s | ${t.audioDuration}: ${audioDuration}s`;
                     timer.style.background = 'var(--accent)';
+                    downloadBtn.classList.remove('hidden');
                     progress.style.width = '100%';
                 } else {
                     const blob = await res.blob();
+                    audioBlob = blob;
                     audio.src = URL.createObjectURL(blob);
                     clearInterval(timerInterval);
                     const totalTime = ((Date.now() - startTime) / 1000).toFixed(2);
-                    timer.textContent = `✅ ${t.completed}! ${totalTime}s`;
+                    timer.textContent = `✅ ${t.totalTime}: ${totalTime}s`;
                     timer.style.background = 'var(--accent)';
                     audio.classList.remove('hidden');
+                    downloadBtn.classList.remove('hidden');
                     audio.play();
                     progress.style.width = '100%';
                 }
@@ -1000,6 +1061,7 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
                 timer.textContent = '❌ Error: ' + e.message;
                 timer.style.background = '#c0392b';
             } finally {
+                currentAudioBlob = audioBlob;
                 btn.disabled = false;
                 setTimeout(() => {
                     progress.style.width = '0%';
