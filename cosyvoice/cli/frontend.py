@@ -61,6 +61,8 @@ class CosyVoiceFrontEnd:
             self.spk2info = {}
         self.allowed_special = allowed_special
         self.use_ttsfrd = use_ttsfrd
+        # 音频 embedding 缓存
+        self.prompt_cache = {}
         if self.use_ttsfrd:
             self.frd = ttsfrd.TtsFrontendEngine()
             ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -163,20 +165,53 @@ class CosyVoiceFrontEnd:
     def frontend_zero_shot(self, tts_text, prompt_text, prompt_wav, resample_rate, zero_shot_spk_id):
         tts_text_token, tts_text_token_len = self._extract_text_token(tts_text)
         if zero_shot_spk_id == '':
-            prompt_text_token, prompt_text_token_len = self._extract_text_token(prompt_text)
-            speech_feat, speech_feat_len = self._extract_speech_feat(prompt_wav)
-            speech_token, speech_token_len = self._extract_speech_token(prompt_wav)
-            if resample_rate == 24000:
-                # cosyvoice2, force speech_feat % speech_token = 2
-                token_len = min(int(speech_feat.shape[1] / 2), speech_token.shape[1])
-                speech_feat, speech_feat_len[:] = speech_feat[:, :2 * token_len], 2 * token_len
-                speech_token, speech_token_len[:] = speech_token[:, :token_len], token_len
-            embedding = self._extract_spk_embedding(prompt_wav)
-            model_input = {'prompt_text': prompt_text_token, 'prompt_text_len': prompt_text_token_len,
-                           'llm_prompt_speech_token': speech_token, 'llm_prompt_speech_token_len': speech_token_len,
-                           'flow_prompt_speech_token': speech_token, 'flow_prompt_speech_token_len': speech_token_len,
-                           'prompt_speech_feat': speech_feat, 'prompt_speech_feat_len': speech_feat_len,
-                           'llm_embedding': embedding, 'flow_embedding': embedding}
+            # 检查缓存 - 使用 prompt_wav 路径作为 key
+            cache_key = f"{prompt_wav}:{prompt_text}" if isinstance(prompt_wav, str) else None
+            cached = self.prompt_cache.get(cache_key) if cache_key else None
+            
+            if cached:
+                # 使用缓存的 embedding
+                model_input = {
+                    'prompt_text': cached['prompt_text_token'],
+                    'prompt_text_len': cached['prompt_text_token_len'],
+                    'llm_prompt_speech_token': cached['speech_token'],
+                    'llm_prompt_speech_token_len': cached['speech_token_len'],
+                    'flow_prompt_speech_token': cached['speech_token'],
+                    'flow_prompt_speech_token_len': cached['speech_token_len'],
+                    'prompt_speech_feat': cached['speech_feat'],
+                    'prompt_speech_feat_len': cached['speech_feat_len'],
+                    'llm_embedding': cached['embedding'],
+                    'flow_embedding': cached['embedding']
+                }
+            else:
+                # 提取特征
+                prompt_text_token, prompt_text_token_len = self._extract_text_token(prompt_text)
+                speech_feat, speech_feat_len = self._extract_speech_feat(prompt_wav)
+                speech_token, speech_token_len = self._extract_speech_token(prompt_wav)
+                if resample_rate == 24000:
+                    # cosyvoice2, force speech_feat % speech_token = 2
+                    token_len = min(int(speech_feat.shape[1] / 2), speech_token.shape[1])
+                    speech_feat, speech_feat_len[:] = speech_feat[:, :2 * token_len], 2 * token_len
+                    speech_token, speech_token_len[:] = speech_token[:, :token_len], token_len
+                embedding = self._extract_spk_embedding(prompt_wav)
+                
+                # 缓存到 GPU 内存
+                if cache_key:
+                    self.prompt_cache[cache_key] = {
+                        'prompt_text_token': prompt_text_token,
+                        'prompt_text_token_len': prompt_text_token_len,
+                        'speech_feat': speech_feat,
+                        'speech_feat_len': speech_feat_len,
+                        'speech_token': speech_token,
+                        'speech_token_len': speech_token_len,
+                        'embedding': embedding
+                    }
+                
+                model_input = {'prompt_text': prompt_text_token, 'prompt_text_len': prompt_text_token_len,
+                               'llm_prompt_speech_token': speech_token, 'llm_prompt_speech_token_len': speech_token_len,
+                               'flow_prompt_speech_token': speech_token, 'flow_prompt_speech_token_len': speech_token_len,
+                               'prompt_speech_feat': speech_feat, 'prompt_speech_feat_len': speech_feat_len,
+                               'llm_embedding': embedding, 'flow_embedding': embedding}
         else:
             model_input = self.spk2info[zero_shot_spk_id]
         model_input['text'] = tts_text_token
