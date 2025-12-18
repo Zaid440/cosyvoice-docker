@@ -106,23 +106,20 @@ class VoiceManager:
 
 voice_manager = VoiceManager(VOICES_DIR)
 
-# GPU Manager
+# GPU Manager - 禁用自动卸载，启动时预热
 class GPUManager:
-    def __init__(self, idle_timeout: int = 60):
+    def __init__(self):
         self.model = None
         self.model_dir = None
         self.lock = threading.Lock()
-        self.last_used = time.time()
-        self.idle_timeout = idle_timeout
-        self._monitor_thread = None
+        self.prompt_cache = {}  # 缓存 prompt 特征
         
     def get_model(self, model_dir: str = None):
         with self.lock:
             if model_dir is None:
-                model_dir = os.getenv("MODEL_DIR", "pretrained_models/CosyVoice2-0.5B")
+                model_dir = os.getenv("MODEL_DIR", "pretrained_models/Fun-CosyVoice3-0.5B")
             if self.model is None or self.model_dir != model_dir:
                 self._load_model(model_dir)
-            self.last_used = time.time()
             return self.model
     
     def _load_model(self, model_dir: str):
@@ -131,27 +128,33 @@ class GPUManager:
         print(f"Loading model from {model_dir}...")
         self.model = AutoModel(model_dir=model_dir)
         self.model_dir = model_dir
-        if self._monitor_thread is None or not self._monitor_thread.is_alive():
-            self._monitor_thread = threading.Thread(target=self._idle_monitor, daemon=True)
-            self._monitor_thread.start()
+        print(f"Model loaded successfully!")
     
-    def _idle_monitor(self):
-        while True:
-            time.sleep(30)
-            with self.lock:
-                if self.model and (time.time() - self.last_used) > self.idle_timeout:
-                    print("GPU idle timeout, offloading...")
-                    self.offload()
+    def preload(self):
+        """启动时预热模型"""
+        print("Preloading model...")
+        self.get_model()
+        print("Model preloaded and ready!")
     
     def offload(self):
+        """手动卸载模型"""
         if self.model:
             del self.model
             self.model = None
             self.model_dir = None
+            self.prompt_cache.clear()
             gc.collect()
             if torch.cuda.is_available():
                 torch.cuda.empty_cache()
             print("GPU memory released")
+    
+    def get_prompt_cache(self, voice_id: str):
+        """获取缓存的 prompt 特征"""
+        return self.prompt_cache.get(voice_id)
+    
+    def set_prompt_cache(self, voice_id: str, cache_data: dict):
+        """缓存 prompt 特征"""
+        self.prompt_cache[voice_id] = cache_data
     
     def status(self) -> dict:
         gpu_info = {"available": torch.cuda.is_available()}
@@ -165,16 +168,18 @@ class GPUManager:
             "model_loaded": self.model is not None,
             "model_dir": self.model_dir,
             "gpu": gpu_info,
-            "idle_seconds": int(time.time() - self.last_used) if self.model else None
+            "prompt_cache_size": len(self.prompt_cache)
         }
 
-gpu_manager = GPUManager(idle_timeout=int(os.getenv("GPU_IDLE_TIMEOUT", "600")))
+gpu_manager = GPUManager()
 
-# FastAPI App
+# FastAPI App - 启动时预热模型
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # 启动时预热模型
+    gpu_manager.preload()
     yield
-    gpu_manager.offload()
+    # 关闭时不自动卸载（保持模型在显存中）
 
 app = FastAPI(
     title="CosyVoice API",
