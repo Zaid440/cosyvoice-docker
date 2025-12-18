@@ -131,9 +131,29 @@ class GPUManager:
         print(f"Model loaded successfully!")
     
     def preload(self):
-        """启动时预热模型"""
+        """启动时预热模型和所有音色的 embedding"""
         print("Preloading model...")
-        self.get_model()
+        model = self.get_model()
+        print("Model preloaded!")
+        
+        # 预热所有已保存音色的 embedding
+        voices = voice_manager.list_all()
+        if voices:
+            print(f"Preloading {len(voices)} voice embeddings...")
+            for v in voices:
+                voice = voice_manager.get(v["id"])
+                if voice and os.path.exists(voice["audio_path"]):
+                    try:
+                        # 调用一次 frontend_zero_shot 触发缓存
+                        model.frontend.frontend_zero_shot(
+                            "预热", voice["text"], voice["audio_path"], 
+                            24000, ""
+                        )
+                        print(f"  ✓ Cached: {v['name']} ({v['id']})")
+                    except Exception as e:
+                        print(f"  ✗ Failed: {v['name']} - {e}")
+            print(f"Voice embeddings cached: {len(model.frontend.prompt_cache)}")
+        
         print("Model preloaded and ready!")
     
     def offload(self):
@@ -164,11 +184,13 @@ class GPUManager:
                 "memory_used": f"{torch.cuda.memory_allocated()/1024**3:.2f} GB",
                 "memory_total": f"{torch.cuda.get_device_properties(0).total_memory/1024**3:.2f} GB",
             })
+        # 获取真实的 frontend 缓存数量
+        cache_size = len(self.model.frontend.prompt_cache) if self.model else 0
         return {
             "model_loaded": self.model is not None,
             "model_dir": self.model_dir,
             "gpu": gpu_info,
-            "prompt_cache_size": len(self.prompt_cache)
+            "prompt_cache_size": cache_size
         }
 
 gpu_manager = GPUManager()
